@@ -156,3 +156,6 @@ dmypy.json
 **/ProjectEvaluation
 **/*.png
 **/*.txt
+
+.vscode/
+.idea/

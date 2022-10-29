@@ -1,5 +1,4 @@
 ﻿using MemesApi.Db;
-using MemesApi.Db.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MemesApi.Starter
@@ -19,8 +18,9 @@ namespace MemesApi.Starter
             var score = _serviceScopeFactory.CreateScope();
             var memeContext = score.ServiceProvider.GetService<MemeContext>();
 
+            if (memeContext is null) return;
+            
             await memeContext.Database.MigrateAsync();
-
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

@@ -39,11 +39,8 @@ namespace MemesApi.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Estimates");
-
-            migrationBuilder.DropTable(
-                name: "Files");
+            migrationBuilder.DropTable(name: "Estimates");
+            migrationBuilder.DropTable(name: "Files");
         }
     }
 }

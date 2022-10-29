@@ -7,11 +7,10 @@ namespace MemesApi.Db
     {
 
         public MemeContext() : base() { }
-        public MemeContext(DbContextOptions<MemeContext> options) : base(options)
-        {
-        }
+        public MemeContext(DbContextOptions<MemeContext> options) : base(options) { }
 
         public DbSet<MemeFile> Files { get; set; } 
         public DbSet<Estimate> Estimates { get; set; }
+        public DbSet<FileMeta> Metas { get; set; }
     }
 }

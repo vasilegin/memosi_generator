@@ -18,18 +18,19 @@ namespace MemesApi.Starter
             var score = _serviceScopeFactory.CreateScope();
             var memeContext = score.ServiceProvider.GetService<MemeContext>();
             
-
-
+            if (memeContext is null) return;
+            
             if(!memeContext.Files.Any())
             {
                 var directoryPath = Path.Combine(Environment.CurrentDirectory, "static");
 
                 var files = Directory.EnumerateFiles(directoryPath)
                     .Where(f => !f.Contains(".gitkeep"))
-                    .Select(path => new MemeFile
+                    .Select(path => new MemeFile 
                     {
                         FileName = path.Split(Path.DirectorySeparatorChar).Last()
-                    }).ToList();
+                    })
+                    .ToList();
 
                 await memeContext.Files.AddRangeAsync(files);
                 await memeContext.SaveChangesAsync();

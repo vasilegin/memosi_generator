@@ -1,11 +1,9 @@
 ﻿using MemesApi.Db;
 using MemesApi.Db.Models;
 using MemesApi.Dto;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.IO;
 
 namespace MemesApi.Controllers
 {
@@ -24,25 +22,22 @@ namespace MemesApi.Controllers
         [HttpPost("/estimate/{imageId:int}")]
         public async Task<ActionResult> Estimate(int imageId, EstimateRequest request)
         {
-
             var image = await _context.Files.FirstOrDefaultAsync(f => f.Id == imageId);
-            if(image is null)
-            {
-                return NotFound();
-            }
+            if(image is null) return NotFound();
 
             var imageFile = image.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0];
             var scoreFileName = string.Join(".", imageFile, "txt");
 
             await System.IO.File.AppendAllTextAsync(
-                Path.Combine(Environment.CurrentDirectory, "static", scoreFileName),
-                $"{request.Estimage} ");
+                Path.Combine(Environment.CurrentDirectory, "static", scoreFileName), 
+                $"{request.Estimate}"
+            );
 
             await _context.Estimates.AddAsync(new Estimate
             {
                 FileId = imageId,
                 ClientId = request.ClientId,
-                Score = request.Estimage
+                Score = request.Estimate
             });
 
             await _context.SaveChangesAsync();
@@ -51,13 +46,10 @@ namespace MemesApi.Controllers
 
         [HttpGet("/next")]
         public async Task<ActionResult<ImageResponse>> GetNextImage(
-            [FromQuery]string clientId, 
+            [FromQuery]string? clientId, 
             [FromQuery]int? previousId)
         {
-            if(clientId is null)
-            {
-                return BadRequest();
-            }
+            if(clientId is null) return BadRequest();
 
             if (previousId != null)
             {
@@ -79,13 +71,11 @@ namespace MemesApi.Controllers
             };
 
             return new ImageResponse(nextFile?.Id, GetFullUrl(nextFile?.FileName), nextFile == null);
-
         }
 
         private string GetFullUrl(string? fileName)
         {
             return $"{_config.Value.UrlPrefix ?? ""}/{fileName}";
         }
-
     }
 }
