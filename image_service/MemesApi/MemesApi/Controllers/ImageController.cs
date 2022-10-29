@@ -36,7 +36,7 @@ namespace MemesApi.Controllers
 
             await System.IO.File.AppendAllTextAsync(
                 Path.Combine(Environment.CurrentDirectory, "static", scoreFileName),
-                $" {request.Estimage}");
+                $"{request.Estimage} ");
 
             await _context.Estimates.AddAsync(new Estimate
             {

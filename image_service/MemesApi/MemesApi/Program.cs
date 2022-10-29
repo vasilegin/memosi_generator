@@ -22,7 +22,8 @@ namespace MemesApi
             builder.Services.AddSwaggerGen();
             builder.Services.Configure<AppSettings>(config =>
             {
-                config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl);
+                config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl)
+                    + "/static";
             });
 
             builder.Services.AddDbContext<MemeContext>(options =>
