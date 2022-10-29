@@ -7,7 +7,7 @@ services:
       - .env
 
     build:
-      context: csharp-src/MemesApi/MemesApi/
+      context: image_service/MemesApi/MemesApi/
       dockerfile: Dockerfile
     
     ports:
@@ -22,7 +22,7 @@ services:
       - .env
     
     build:
-      context: python-src/
+      context: tg_bot/
       dockerfile: Dockerfile
 
     
