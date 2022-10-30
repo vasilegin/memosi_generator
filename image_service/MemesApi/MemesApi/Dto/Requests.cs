@@ -2,5 +2,3 @@
 {
     public record EstimateRequest(int Estimate, string ClientId);
 }
-
-

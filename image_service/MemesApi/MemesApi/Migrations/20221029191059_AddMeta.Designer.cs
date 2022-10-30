@@ -3,6 +3,7 @@ using System;
 using MemesApi.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MemesApi.Migrations
 {
     [DbContext(typeof(MemeContext))]
-    partial class MemeContextModelSnapshot : ModelSnapshot
+    [Migration("20221029191059_AddMeta")]
+    partial class AddMeta
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.10");
@@ -34,10 +36,6 @@ namespace MemesApi.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ClientId");
-
-                    b.HasIndex("FileId");
 
                     b.ToTable("Estimates");
                 });
@@ -77,35 +75,7 @@ namespace MemesApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MetaId")
-                        .IsUnique();
-
                     b.ToTable("Files");
-                });
-
-            modelBuilder.Entity("MemesApi.Db.Models.Estimate", b =>
-                {
-                    b.HasOne("MemesApi.Db.Models.MemeFile", "File")
-                        .WithMany("Estimates")
-                        .HasForeignKey("FileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("File");
-                });
-
-            modelBuilder.Entity("MemesApi.Db.Models.MemeFile", b =>
-                {
-                    b.HasOne("MemesApi.Db.Models.FileMeta", "Meta")
-                        .WithOne()
-                        .HasForeignKey("MemesApi.Db.Models.MemeFile", "MetaId");
-
-                    b.Navigation("Meta");
-                });
-
-            modelBuilder.Entity("MemesApi.Db.Models.MemeFile", b =>
-                {
-                    b.Navigation("Estimates");
                 });
 #pragma warning restore 612, 618
         }
