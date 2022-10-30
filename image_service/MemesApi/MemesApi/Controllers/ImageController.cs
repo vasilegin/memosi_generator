@@ -21,7 +21,7 @@ namespace MemesApi.Controllers
             _config = config;
         }
 
-        [HttpPost("/estimate/{imageId:int}")]
+        [HttpPost("estimate/{imageId:int}")]
         public async Task<ActionResult> Estimate(int imageId, EstimateRequest request)
         {
 
@@ -49,7 +49,7 @@ namespace MemesApi.Controllers
             return Ok();
         }
 
-        [HttpGet("/next")]
+        [HttpGet("next")]
         public async Task<ActionResult<ImageResponse>> GetNextImage(
             [FromQuery]string clientId, 
             [FromQuery]int? previousId)

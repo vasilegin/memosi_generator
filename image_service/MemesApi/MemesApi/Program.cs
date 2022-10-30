@@ -20,6 +20,10 @@ namespace MemesApi
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.Configure<RouteOptions>(conf =>
+            {
+                conf.LowercaseUrls = true;
+            });
             builder.Services.Configure<AppSettings>(config =>
             {
                 config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl)
