@@ -49,8 +49,6 @@ namespace MemesApi.Controllers
             [FromQuery][Required]string clientId, 
             [FromQuery]int? previousId)
         {
-            if(clientId is null) return BadRequest();
-
             if (previousId != null)
             {
                 var result = await _context.Files
