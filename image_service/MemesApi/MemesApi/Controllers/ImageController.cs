@@ -36,13 +36,13 @@ namespace MemesApi.Controllers
 
             await System.IO.File.AppendAllTextAsync(
                 Path.Combine(Environment.CurrentDirectory, "static", scoreFileName),
-                $"{request.Estimage} ");
+                $"{request.Estimate} ");
 
             await _context.Estimates.AddAsync(new Estimate
             {
                 FileId = imageId,
                 ClientId = request.ClientId,
-                Score = request.Estimage
+                Score = request.Estimate
             });
 
             await _context.SaveChangesAsync();
