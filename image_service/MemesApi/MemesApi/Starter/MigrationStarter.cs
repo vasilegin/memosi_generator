@@ -18,7 +18,7 @@ namespace MemesApi.Starter
             var score = _serviceScopeFactory.CreateScope();
             var memeContext = score.ServiceProvider.GetService<MemeContext>();
 
-            if (memeContext is null) return;
+            if (memeContext is null) throw new ApplicationException("Can't get MemeContext service");
             
             await memeContext.Database.MigrateAsync();
         }

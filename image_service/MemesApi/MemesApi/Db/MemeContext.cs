@@ -5,13 +5,12 @@ namespace MemesApi.Db
 {
     public class MemeContext: DbContext
     {
-
-        public MemeContext() : base() { }
+        public MemeContext() { }
         public MemeContext(DbContextOptions<MemeContext> options) : base(options) { }
 
-        public DbSet<MemeFile> Files { get; set; } 
-        public DbSet<Estimate> Estimates { get; set; }
-        public DbSet<FileMeta> Metas { get; set; }
+        public DbSet<MemeFile> Files { get; set; } = null!;
+        public DbSet<Estimate> Estimates { get; set; } = null!;
+        public DbSet<FileMeta> Metas { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

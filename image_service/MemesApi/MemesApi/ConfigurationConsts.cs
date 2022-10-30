@@ -3,6 +3,6 @@
     public static class ConfigurationConsts
     {
         public const string ApiUrl = "API_URL";
-        public const string ConnectionString = "ConnectionString";
+        public const string ConnectionString = "CONNECTION_STRING";
     }
 }

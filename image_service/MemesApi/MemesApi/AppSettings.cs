@@ -2,7 +2,6 @@
 {
     public class AppSettings
     {
-        public const string Section = nameof(AppSettings);
-        public string UrlPrefix { get; set; }
+        public string UrlPrefix { get; set; } = null!;
     }
 }
