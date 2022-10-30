@@ -4,6 +4,7 @@ using MemesApi.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.ComponentModel.DataAnnotations;
 
 namespace MemesApi.Controllers
 {
@@ -45,7 +46,7 @@ namespace MemesApi.Controllers
 
         [HttpGet("next")]
         public async Task<ActionResult<ImageResponse>> GetNextImage(
-            [FromQuery]string? clientId, 
+            [FromQuery][Required]string clientId, 
             [FromQuery]int? previousId)
         {
             if(clientId is null) return BadRequest();
