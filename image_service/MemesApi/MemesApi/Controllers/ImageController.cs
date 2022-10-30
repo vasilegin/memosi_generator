@@ -21,7 +21,7 @@ namespace MemesApi.Controllers
             _config = config;
         }
 
-        [HttpPost("/estimate/{imageId:int}")]
+        [HttpPost("estimate/{imageId:int}")]
         public async Task<ActionResult> Estimate(int imageId, EstimateRequest request)
         {
 
@@ -36,20 +36,20 @@ namespace MemesApi.Controllers
 
             await System.IO.File.AppendAllTextAsync(
                 Path.Combine(Environment.CurrentDirectory, "static", scoreFileName),
-                $"{request.Estimage} ");
+                $"{request.Estimate} ");
 
             await _context.Estimates.AddAsync(new Estimate
             {
                 FileId = imageId,
                 ClientId = request.ClientId,
-                Score = request.Estimage
+                Score = request.Estimate
             });
 
             await _context.SaveChangesAsync();
             return Ok();
         }
 
-        [HttpGet("/next")]
+        [HttpGet("next")]
         public async Task<ActionResult<ImageResponse>> GetNextImage(
             [FromQuery]string clientId, 
             [FromQuery]int? previousId)
