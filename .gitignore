@@ -155,7 +155,7 @@ dmypy.json
 **/v17
 **/ProjectEvaluation
 **/*.png
-**/*.txt
+**/static/*.txt
 
 .vscode/
 .idea/

@@ -1,11 +1,12 @@
 from pathlib import Path
 import os
 
-BOT_TOKEN = os.environ['BotTOKEN']
+BOT_TOKEN = '5730171718:AAE4zHAyiu8vhu0W3rKCd088ZIhhTDs0ZB4'
 BASE_URL = ''
 
-API_URL = 'http://127.0.0.1:9999'
-
+#take url from env if started via
+API_URL = os.environ.get('API_URL') or "http://127.0.0.1:9999"
+print(API_URL)
 admins = []
 
 ip = {

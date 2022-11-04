@@ -15,7 +15,7 @@ namespace MemesApi
             {
                 Args = args,
             });
-            builder.WebHost.UseUrls(builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl));
+            builder.WebHost.UseUrls("http://*:9999");
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
