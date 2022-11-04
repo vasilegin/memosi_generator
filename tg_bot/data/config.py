@@ -4,7 +4,7 @@ import os
 BOT_TOKEN = os.environ['BotTOKEN']
 BASE_URL = ''
 
-LOGS_BASE_PATH = str(Path(__file__).parent.parent / 'logs')
+API_URL = 'http://127.0.0.1:9999'
 
 admins = []
 
