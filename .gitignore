@@ -145,8 +145,6 @@ dmypy.json
 **/bin/
 **/obj/
 **/global.json
-**/Dockerfile*
-**/.dockerignore*
 **/*.user
 *.config
 **/DesignTimeBuild
