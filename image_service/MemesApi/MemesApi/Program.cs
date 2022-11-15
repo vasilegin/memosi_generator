@@ -1,7 +1,11 @@
+using MemesApi.Controllers.Filters;
 using MemesApi.Db;
 using MemesApi.Starter;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 
 namespace MemesApi
 {
@@ -16,8 +20,26 @@ namespace MemesApi
                 Args = args,
             });
             builder.WebHost.UseUrls("http://*:9999");
+            
+            builder.Host.UseSerilog((context, services, configuration) =>
+            {
+                configuration
+                    .WriteTo.Console(LogEventLevel.Information, outputTemplate: ConfigurationConsts.OutputTemplate)
+                    .WriteTo.File("./logs/log.txt", LogEventLevel.Debug, rollingInterval: RollingInterval.Day, outputTemplate: ConfigurationConsts.OutputTemplate)
+                    .Enrich.FromLogContext();
 
-            builder.Services.AddControllers();
+                configuration
+                    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning);
+
+
+            });
+
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<LoggingFilter>();
+            });
+            
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.Configure<RouteOptions>(conf =>
@@ -33,7 +55,6 @@ namespace MemesApi
             builder.Services.AddDbContext<MemeContext>(options =>
             {
                 options.UseSqlite(builder.Configuration.GetValue<string>(ConfigurationConsts.ConnectionString));
-                options.EnableSensitiveDataLogging();
             });
 
             builder.Services.AddHostedService<MigrationStarter>();
@@ -47,10 +68,9 @@ namespace MemesApi
                      Path.Combine(builder.Environment.ContentRootPath, "static")),
                 RequestPath = "/static"
             });
-
+            
             app.UseSwagger();
             app.UseSwaggerUI();
-           
             app.MapControllers();
 
             app.Run();
