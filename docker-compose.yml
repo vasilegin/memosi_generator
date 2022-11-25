@@ -13,12 +13,12 @@ services:
       - ${STATIC_FILES_PATH}:/app/static
     restart: always
 
-  bot:
-    env_file:
-      - .env
-    build:
-      context: tg_bot/
-      dockerfile: Dockerfile
+  # bot:
+  #   env_file:
+  #     - .env
+  #   build:
+  #     context: tg_bot/
+  #     dockerfile: Dockerfile
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor
@@ -29,7 +29,7 @@ services:
       - .env
     command:
       - '--housekeeping_interval=10s'
-      - '-allow_dynamic_housekeeping=false'
+      - '--allow_dynamic_housekeeping=false'
       - '--docker_only=true'
     volumes:
       - /:/rootfs:ro
@@ -38,7 +38,7 @@ services:
       - ${CADVISOR_MNT}:/rootfs/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     ports:
-      - 8080:8080
+      - 8077:8080
 
   node-exporter:
     image: quay.io/prometheus/node-exporter
@@ -47,7 +47,6 @@ services:
     command:
       - '--path.rootfs=/host'
     pid: host
-    network_mode: "host"
     ports:
       - 9100:9100
     volumes:
@@ -57,7 +56,6 @@ services:
     container_name: grafana
     image: grafana/grafana:7.5.6
     restart: always
-    network_mode: "host"
     ports:
       - 3000:3000
     volumes:
@@ -67,9 +65,10 @@ services:
     container_name: prometheus
     image: prom/prometheus:latest
     restart: always
+    ports:
+      - 9090:9090
     volumes:
       - ./monitoring/prometheus/:/etc/prometheus/
-    network_mode: "host"
 
   portainer:
     container_name: portainer
