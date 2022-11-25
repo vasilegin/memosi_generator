@@ -3,6 +3,7 @@ using MemesApi.Db;
 using MemesApi.Starter;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Prometheus;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -71,7 +72,10 @@ namespace MemesApi
             
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseRouting();
+            app.UseHttpMetrics();
             app.MapControllers();
+            app.MapMetrics();
 
             app.Run();
         }
