@@ -157,3 +157,5 @@ dmypy.json
 
 .vscode/
 .idea/
+
+monitoring/prometheus/*.Identifier
