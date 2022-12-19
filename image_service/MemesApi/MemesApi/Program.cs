@@ -51,6 +51,7 @@ namespace MemesApi
             {
                 config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl)
                     + "/static";
+                config.MaxImageSize = 10 * 1024 * 1024; // 10 МБ
             });
 
             builder.Services.AddDbContext<MemeContext>(options =>
