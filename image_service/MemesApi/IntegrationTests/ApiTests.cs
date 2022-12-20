@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -22,10 +23,10 @@ namespace IntegrationTests;
 
 public class ApiTests
 {
-	private const string ApiUrl = "http://127.0.0.1:9999/api/images";
+	private const string ApiUrl = "http://127.0.0.1:9999/api/images/";
 	
 	private const string EstimateUrl = "estimate/{0}";
-	private const string GetNextUrl = "next";
+	private const string GetNextUrl = "next?clientId={0}&previousId={1}";
 
 	private static readonly Dictionary<string, string> TestConfiguration = new()
 	{
@@ -66,6 +67,7 @@ public class ApiTests
 		var scope = _application.Services.CreateScope();
 		_db = scope.ServiceProvider.GetService<MemeContext>()!;
 		_client = _application.CreateClient();
+		_client.BaseAddress = new Uri(ApiUrl);
 	}
 	[Test]
 	public async Task Estimate_NotFound()
@@ -78,4 +80,90 @@ public class ApiTests
 		Assert.False(response.IsSuccessStatusCode);
 		Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
 	}
+
+
+	[Test]
+	public async Task IndexingTest()
+	{
+		var path = Path.Combine(Environment.CurrentDirectory, "static");
+		var files = Directory.EnumerateFiles(path)
+			.Where(f => !f.Contains(".gitkeep"))
+			.Select(path => path.Split(Path.DirectorySeparatorChar).Last())
+			.ToList();
+		
+		var dbFiles = await _db.Files.ToListAsync();
+		
+		Assert.AreEqual(files.Count, dbFiles.Count);
+		foreach (var file in files)
+		{
+			Assert.True(dbFiles.Any(f => f.FileName == file));
+		}
+	}
+
+	[Test]
+	public async Task GetNextImageFlow_Test()
+	{
+		var userId = Guid.NewGuid().ToString();
+		var previousId = 0;
+		while (true)
+		{
+			var nextImageResponse = await _client.GetAsync(string.Format(GetNextUrl, userId, previousId));
+			Assert.True(nextImageResponse.IsSuccessStatusCode);
+			
+			var nextImage = await nextImageResponse.Content.ReadFromJsonAsync<ImageResponse>();
+		
+			Assert.NotNull(nextImage);
+			if (nextImage!.Finished)
+			{
+				Assert.Null(nextImage.ImageId);
+				return;
+			}
+			
+			Assert.AreNotEqual(previousId, nextImage.ImageId);
+
+			var imageContent = await _client.GetAsync(nextImage.Url);
+			Assert.True(imageContent.IsSuccessStatusCode);
+
+			var dbImage = await _db.Files.FindAsync(nextImage.ImageId);
+		
+			Assert.NotNull(dbImage);
+			Assert.True(nextImage.Url!.Contains(dbImage!.FileName));
+			
+			previousId = nextImage.ImageId!.Value;
+		}
+	}
+
+
+	[Test]
+	public async Task EstimateBasic_Test()
+	{
+		var userId = Guid.NewGuid().ToString();
+		var estimateValue = 2;
+		
+		var nextImageResponse = await _client.GetAsync(string.Format(GetNextUrl, userId, 0));
+		Assert.True(nextImageResponse.IsSuccessStatusCode);
+		
+		var nextImage = await nextImageResponse.Content.ReadFromJsonAsync<ImageResponse>();
+		Assert.NotNull(nextImage);
+		Assert.False(nextImage!.Finished);
+
+		var beforeCount = await _db.Estimates.CountAsync();
+
+		var estimateRequest = await _client.PostAsJsonAsync(
+			string.Format(EstimateUrl, nextImage.ImageId),
+			new EstimateRequest(estimateValue, userId));
+		
+		Assert.True(estimateRequest.IsSuccessStatusCode);
+
+		var afterCount = await _db.Estimates.CountAsync();
+		
+		Assert.AreEqual(beforeCount + 1, afterCount);
+
+		var estimate = await _db.Estimates.FirstOrDefaultAsync(e => e.ClientId == userId);
+		
+		Assert.NotNull(estimate);
+		Assert.AreEqual(estimateValue, estimate.Score);
+		Assert.AreEqual(nextImage.ImageId, estimate.FileId);
+	}
+
 }

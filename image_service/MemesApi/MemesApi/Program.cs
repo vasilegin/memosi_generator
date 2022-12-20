@@ -65,11 +65,23 @@ namespace MemesApi
             builder.Services.AddHostedService<MigrationStarter>();
             builder.Services.AddHostedService<ImageIndexer>();
             
+            builder.Services.Configure<AppSettings>(config =>
+            {
+                config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl) + "/static";
+            });
+            
         }
 
         private static WebApplication ConfigureApp(WebApplicationBuilder builder)
         {
             var app = builder.Build();
+            
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(Environment.CurrentDirectory, "static")),
+                RequestPath = "/static"
+            });
             
             app.UseSwagger();
             app.UseSwaggerUI();
