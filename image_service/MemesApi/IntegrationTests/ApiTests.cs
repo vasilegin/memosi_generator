@@ -159,11 +159,18 @@ public class ApiTests
 		
 		Assert.AreEqual(beforeCount + 1, afterCount);
 
-		var estimate = await _db.Estimates.FirstOrDefaultAsync(e => e.ClientId == userId);
+		var estimate = await _db.Estimates
+			.Include(e => e.File)
+			.FirstOrDefaultAsync(e => e.ClientId == userId);
 		
 		Assert.NotNull(estimate);
 		Assert.AreEqual(estimateValue, estimate.Score);
 		Assert.AreEqual(nextImage.ImageId, estimate.FileId);
+		
+		var imageFile = estimate.File.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0];
+		var scoreFileName = string.Join(".", imageFile, "txt");
+		
+		Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", scoreFileName)));
 	}
 
 }
