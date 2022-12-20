@@ -43,7 +43,7 @@ namespace MemesApi.Starter
 
                         return (file, meta);
                     })
-                    .Aggregate(Tuple.Create(new List<MemeFile>(), new List<FileMeta>()), (unpacked, record) =>
+                    .Aggregate((new List<MemeFile>(), new List<FileMeta>()), (unpacked, record) =>
                     {
                         unpacked.Item1.Add(record.file);
                         unpacked.Item2.Add(record.meta);

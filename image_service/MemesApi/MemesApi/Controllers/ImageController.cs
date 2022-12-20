@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
+using MemesApi.Controllers.Attributes;
 
 namespace MemesApi.Controllers
 {
@@ -72,27 +73,19 @@ namespace MemesApi.Controllers
         }
         
         [HttpPost("upload")]
-        public async Task<ActionResult<ImageResponse>> UploadImage([Required] IFormFile imageFile)
+        public async Task<ActionResult<ImageResponse>> UploadImage(
+            [Required]
+            [ImageValidation(MaxSize = 10 * 1024 * 1024, Extensions=".png,.jpg,.jpeg")] 
+            IFormFile imageFile)
         {
             var format = imageFile.ContentType.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
-            if (format != "jpeg" && format != "png")
-            {
-                return BadRequest($"Invalid image format. Excepted jpeg or png. Got `{format}`");
-            }
-            
-            if (imageFile.Length == 0 || imageFile.Length > _config.Value.MaxImageSize) // Вроде как может быть 0.
-            {
-                return BadRequest($"Invalid image size. Excepted 0 < size <= {_config.Value.MaxImageSize} bytes. Got {imageFile.Length} bytes");
-            }
-
             var fileName = $"{Guid.NewGuid()}.{format}";
             var filePath = $"./static/{fileName}";
             DateTime creationDate;
             await using (var stream = System.IO.File.Create(filePath))
             {
                 await imageFile.CopyToAsync(stream);
-                FileSystemInfo fileInfo = new FileInfo(filePath);
-                creationDate = fileInfo.CreationTime;
+                creationDate = DateTime.Now;
             }
             
             var fileMeta = new FileMeta { Format = format, CreationDate = creationDate };
