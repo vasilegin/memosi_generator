@@ -10,18 +10,26 @@ using Serilog.Events;
 
 namespace MemesApi
 {
-    public class Program
+    public partial class Program
     {
-        public static void Main(string[] args)
+         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            WebApplication.CreateBuilder(new WebApplicationOptions
-            {
-                Args = args,
-            });
+            WebApplication.CreateBuilder(args);
+            
             builder.WebHost.UseUrls("http://*:9999");
             
+            ConfigureLogging(builder);
+
+            ConfigureServices(builder);
+
+            ConfigureApp(builder).Run();
+        }
+
+
+        private static void ConfigureLogging(WebApplicationBuilder builder)
+        {
             builder.Host.UseSerilog((context, services, configuration) =>
             {
                 configuration
@@ -32,10 +40,11 @@ namespace MemesApi
                 configuration
                     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning);
-
-
             });
-
+        }
+        
+        private static void ConfigureServices(WebApplicationBuilder builder)
+        {
             builder.Services.AddControllers(options =>
             {
                 options.Filters.Add<LoggingFilter>();
@@ -47,11 +56,6 @@ namespace MemesApi
             {
                 conf.LowercaseUrls = true;
             });
-            builder.Services.Configure<AppSettings>(config =>
-            {
-                config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl)
-                    + "/static";
-            });
 
             builder.Services.AddDbContext<MemeContext>(options =>
             {
@@ -61,14 +65,11 @@ namespace MemesApi
             builder.Services.AddHostedService<MigrationStarter>();
             builder.Services.AddHostedService<ImageIndexer>();
             
-            var app = builder.Build();
+        }
 
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(
-                     Path.Combine(builder.Environment.ContentRootPath, "static")),
-                RequestPath = "/static"
-            });
+        private static WebApplication ConfigureApp(WebApplicationBuilder builder)
+        {
+            var app = builder.Build();
             
             app.UseSwagger();
             app.UseSwaggerUI();
@@ -76,8 +77,8 @@ namespace MemesApi
             app.UseHttpMetrics();
             app.MapControllers();
             app.MapMetrics();
-
-            app.Run();
+            return app;
         }
+        
     }
 }
