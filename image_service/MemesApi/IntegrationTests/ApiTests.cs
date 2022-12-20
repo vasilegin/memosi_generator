@@ -69,17 +69,6 @@ public class ApiTests
 		_client = _application.CreateClient();
 		_client.BaseAddress = new Uri(ApiUrl);
 	}
-	[Test]
-	public async Task Estimate_NotFound()
-	{
-		var request = new EstimateRequest(10, Guid.NewGuid().ToString());
-		var randomImageId = _random.Next(1000000, 5000000);
-
-		var response = await _client.PostAsJsonAsync(string.Format(EstimateUrl, randomImageId), request);
-
-		Assert.False(response.IsSuccessStatusCode);
-		Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
-	}
 
 
 	[Test]
@@ -101,7 +90,7 @@ public class ApiTests
 	}
 
 	[Test]
-	public async Task GetNextImageFlow_Test()
+	public async Task GetNextImage_Flow_Test()
 	{
 		var userId = Guid.NewGuid().ToString();
 		var previousId = 0;
@@ -128,6 +117,8 @@ public class ApiTests
 		
 			Assert.NotNull(dbImage);
 			Assert.True(nextImage.Url!.Contains(dbImage!.FileName));
+			
+			Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", dbImage.FileName)));
 			
 			previousId = nextImage.ImageId!.Value;
 		}
@@ -172,5 +163,89 @@ public class ApiTests
 		
 		Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", scoreFileName)));
 	}
+	
+	[Test]
+	public async Task Estimate_NotExistingImage_Negative_Test()
+	{
+		var request = new EstimateRequest(10, Guid.NewGuid().ToString());
+		var randomImageId = _random.Next(1000000, 5000000);
+
+		var response = await _client.PostAsJsonAsync(string.Format(EstimateUrl, randomImageId), request);
+
+		Assert.False(response.IsSuccessStatusCode);
+		Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
+	}
+
+
+	[Test]
+	public async Task GetNextImage_EmptyClient_Negative_Test()
+	{
+		var response = await _client.GetAsync(GetNextUrl);
+		Assert.False(response.IsSuccessStatusCode);
+		Assert.AreEqual(response.StatusCode, HttpStatusCode.BadRequest);
+	}
+
+	[Test]
+	public async Task Estimate_GetNextImage_FullFlow_Test()
+	{
+		var userId = Guid.NewGuid().ToString();
+		var previousId = 0;
+		var estimateValue = 2;
+		while (true)
+		{
+			var nextImageResponse = await _client.GetAsync(string.Format(GetNextUrl, userId, ""));
+			Assert.True(nextImageResponse.IsSuccessStatusCode);
+			
+			var nextImage = await nextImageResponse.Content.ReadFromJsonAsync<ImageResponse>();
+			Assert.NotNull(nextImage);
+			if (nextImage!.Finished)
+			{
+				Assert.Null(nextImage.ImageId);
+				return;
+			}
+			
+			Assert.AreNotEqual(previousId, nextImage.ImageId);
+
+			var imageContent = await _client.GetAsync(nextImage.Url);
+			Assert.True(imageContent.IsSuccessStatusCode);
+
+			var dbImage = await _db.Files.FindAsync(nextImage.ImageId);
+		
+			Assert.NotNull(dbImage);
+			Assert.True(nextImage.Url!.Contains(dbImage!.FileName));
+			
+			Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", dbImage.FileName)));
+
+			
+			var beforeCount = await _db.Estimates.CountAsync();
+
+			var estimateResponse = await _client.PostAsJsonAsync(
+				string.Format(EstimateUrl, nextImage.ImageId),
+				new EstimateRequest(estimateValue, userId));
+			
+			Assert.True(estimateResponse.IsSuccessStatusCode);
+			
+			var afterCount = await _db.Estimates.CountAsync();
+		
+			Assert.AreEqual(beforeCount + 1, afterCount);
+
+			var estimate = await _db.Estimates
+				.Include(e => e.File)
+				.FirstOrDefaultAsync(e => e.ClientId == userId && e.FileId == nextImage.ImageId);
+		
+			Assert.NotNull(estimate);
+			Assert.AreEqual(estimateValue, estimate.Score);
+			Assert.AreEqual(nextImage.ImageId, estimate.FileId);
+		
+			var imageFile = estimate.File.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0];
+			var scoreFileName = string.Join(".", imageFile, "txt");
+		
+			Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", scoreFileName)));
+			
+			
+			previousId = nextImage.ImageId!.Value;
+		}
+	}
+
 
 }
