@@ -56,7 +56,6 @@ namespace MemesApi
             {
                 conf.LowercaseUrls = true;
             });
-
             builder.Services.AddDbContext<MemeContext>(options =>
             {
                 options.UseSqlite(builder.Configuration.GetValue<string>(ConfigurationConsts.ConnectionString));
@@ -64,10 +63,11 @@ namespace MemesApi
 
             builder.Services.AddHostedService<MigrationStarter>();
             builder.Services.AddHostedService<ImageIndexer>();
-            
+
             builder.Services.Configure<AppSettings>(config =>
             {
                 config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl) + "/static";
+                config.MaxImageSize = 10 * 1024 * 1024; // 10 МБ
             });
             
         }

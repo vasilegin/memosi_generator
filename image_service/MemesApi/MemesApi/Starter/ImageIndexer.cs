@@ -23,15 +23,34 @@ namespace MemesApi.Starter
             if(!memeContext.Files.Any())
             {
                 var directoryPath = Path.Combine(Environment.CurrentDirectory, "static");
-
-                var files = Directory.EnumerateFiles(directoryPath)
+                
+                var (files, metas) = Directory.EnumerateFiles(directoryPath)
                     .Where(f => !f.Contains(".gitkeep"))
-                    .Select(path => new MemeFile 
+                    .Select(path =>
                     {
-                        FileName = path.Split(Path.DirectorySeparatorChar).Last()
-                    })
-                    .ToList();
+                        FileSystemInfo info = new FileInfo(path);
+                        var meta = new FileMeta
+                        {
+                            Format = info.Extension.Remove(0), //  Extension возвращает расширение с точкой, нам оно не нужно
+                            CreationDate = info.CreationTime,
+                            UpdateDate = info.LastWriteTime
+                        };
+                        var file = new MemeFile
+                        {
+                            FileName = path.Split(Path.DirectorySeparatorChar).Last(),
+                            Meta = meta,
+                        };
 
+                        return (file, meta);
+                    })
+                    .Aggregate(Tuple.Create(new List<MemeFile>(), new List<FileMeta>()), (unpacked, record) =>
+                    {
+                        unpacked.Item1.Add(record.file);
+                        unpacked.Item2.Add(record.meta);
+                        return unpacked;
+                    });
+
+                await memeContext.Metas.AddRangeAsync(metas);
                 await memeContext.Files.AddRangeAsync(files);
                 await memeContext.SaveChangesAsync();
             }
