@@ -23,10 +23,11 @@ namespace IntegrationTests;
 
 public class ApiTests
 {
-	private const string ApiUrl = "http://127.0.0.1:9999/api/images/";
-	
-	private const string EstimateUrl = "estimate/{0}";
-	private const string GetNextUrl = "next?clientId={0}&previousId={1}";
+	private const string ApiUrl = "http://127.0.0.1:9999/";
+
+	private const string MetricsUrl = "metrics";
+	private const string EstimateUrl = "api/images/estimate/{0}";
+	private const string GetNextUrl = "api/images/next?clientId={0}&previousId={1}";
 
 	private static readonly Dictionary<string, string> TestConfiguration = new()
 	{
@@ -245,6 +246,18 @@ public class ApiTests
 			
 			previousId = nextImage.ImageId!.Value;
 		}
+	}
+
+
+	[Test]
+	public async Task MetricsAvailable_Test()
+	{
+		var metricsResponse = await _client.GetAsync(MetricsUrl);
+		Assert.True(metricsResponse.IsSuccessStatusCode);
+
+		var result = await metricsResponse.Content.ReadAsStringAsync();
+		//some random metric
+		Assert.True(result.Contains("dotnet_collection_count_total"));
 	}
 
 
