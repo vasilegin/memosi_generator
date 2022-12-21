@@ -4,18 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using MemesApi;
 using MemesApi.Db;
 using MemesApi.Dto;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
@@ -28,6 +27,7 @@ public class ApiTests
 	private const string MetricsUrl = "metrics";
 	private const string EstimateUrl = "api/images/estimate/{0}";
 	private const string GetNextUrl = "api/images/next?clientId={0}&previousId={1}";
+	private const string UploadImage = "api/images/upload";
 
 	private static readonly Dictionary<string, string> TestConfiguration = new()
 	{
@@ -248,6 +248,96 @@ public class ApiTests
 		}
 	}
 
+
+	private async Task<string> CreateTempFile(long length, string extension)
+	{
+		var tempFile = Path.GetTempFileName();
+		tempFile = Path.ChangeExtension(tempFile, extension);
+		await using(var stream = File.OpenWrite(tempFile))
+		{
+			var buffer = new byte[length];
+			await stream.WriteAsync(buffer);
+		}
+
+		return tempFile;
+	}
+
+	[Test]
+	public async Task InvalidImageFormat_Test()
+	{
+		var file = await CreateTempFile(50 * 1024, ".gif");
+		HttpResponseMessage response;
+		await using (var stream = File.OpenRead(file))
+		{
+			var streamContent = new StreamContent(stream);
+			streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/gif");
+
+			var multipart = new MultipartFormDataContent();
+			multipart.Add(streamContent, "imageFile", Path.GetFileName(file));
+
+			response = await _client.PostAsync(UploadImage, multipart);
+		}
+		
+		var content = await response.Content.ReadAsStringAsync();
+		Assert.True(response.StatusCode == HttpStatusCode.BadRequest, "Invalid response. " +
+		                                                              $"Expected {HttpStatusCode.BadRequest}. " +
+		                                                              $"Got {response.StatusCode}. " + 
+		                                                              $"Content: {content}");
+	}
+	
+	[Test]
+	public async Task InvalidImageSize_Test()
+	{
+		var file = await CreateTempFile(20 * 1024 * 1024, ".png");
+		HttpResponseMessage response;
+		await using (var stream = File.OpenRead(file))
+		{
+			var streamContent = new StreamContent(stream);
+			streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+			
+			var multipart = new MultipartFormDataContent();
+			multipart.Add(streamContent, "imageFile", Path.GetFileName(file));
+
+			response = await _client.PostAsync(UploadImage, multipart);
+		}
+		
+		var content = await response.Content.ReadAsStringAsync();
+		Assert.True(response.StatusCode == HttpStatusCode.BadRequest, "Invalid response. " +
+		                                                              $"Expected {HttpStatusCode.BadRequest}. " +
+		                                                              $"Got {response.StatusCode}. " + 
+		                                                              $"Content: {content}");
+	}
+	
+	[Test]
+	public async Task UploadImage_Test()
+	{
+		HttpResponseMessage response;
+		await using(var stream = File.OpenRead("static/test_image.jpg"))
+		{
+			var streamContent = new StreamContent(stream);
+			streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpg");
+
+			var multipart = new MultipartFormDataContent();
+			multipart.Add(streamContent, "imageFile", "test_image.jpg");
+
+			response = await _client.PostAsync(UploadImage, multipart);
+		}
+		
+		var content = await response.Content.ReadAsStringAsync();
+		Assert.True(response.StatusCode == HttpStatusCode.OK, "Invalid response. " +
+		                                                      $"Expected {HttpStatusCode.OK}. " +
+		                                                      $"Got {response.StatusCode}. " + 
+		                                                      $"Content: {content}");
+
+		var imageResponse = await response.Content.ReadFromJsonAsync<ImageResponse>();
+		response = await _client.GetAsync(imageResponse.Url);
+		Assert.True(response.StatusCode == HttpStatusCode.OK, "Invalid response. " +
+		                                                      $"Expected {HttpStatusCode.OK}. " +
+		                                                      $"Got {response.StatusCode}. ");
+
+		var memeFile = await _db.Files.FindAsync(imageResponse.ImageId);
+		Assert.True(memeFile is not null, $"Can't find {imageResponse.ImageId} in db.");
+	}
 
 	[Test]
 	public async Task MetricsAvailable_Test()
