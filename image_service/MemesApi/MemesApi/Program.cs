@@ -1,5 +1,6 @@
 using MemesApi.Controllers.Filters;
 using MemesApi.Db;
+using MemesApi.Services;
 using MemesApi.Starter;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -69,7 +70,16 @@ namespace MemesApi
                 config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl) + "/static";
                 config.MaxImageSize = 10 * 1024 * 1024; // 10 МБ
             });
-            
+
+            var modelUrl = builder.Configuration.GetValue<string>(ConfigurationConsts.ModelUrl);
+            if (modelUrl is null)
+            {
+                builder.Services.AddTransient<IModelService, MockModelService>();
+            }
+            else
+            {
+                builder.Services.AddTransient<IModelService, MlModelService>();
+            }
         }
 
         private static WebApplication ConfigureApp(WebApplicationBuilder builder)
