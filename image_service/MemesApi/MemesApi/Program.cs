@@ -1,5 +1,6 @@
 using MemesApi.Controllers.Filters;
 using MemesApi.Db;
+using MemesApi.Services;
 using MemesApi.Starter;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -56,7 +57,6 @@ namespace MemesApi
             {
                 conf.LowercaseUrls = true;
             });
-
             builder.Services.AddDbContext<MemeContext>(options =>
             {
                 options.UseSqlite(builder.Configuration.GetValue<string>(ConfigurationConsts.ConnectionString));
@@ -64,12 +64,22 @@ namespace MemesApi
 
             builder.Services.AddHostedService<MigrationStarter>();
             builder.Services.AddHostedService<ImageIndexer>();
-            
+
             builder.Services.Configure<AppSettings>(config =>
             {
                 config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl) + "/static";
+                config.MaxImageSize = 10 * 1024 * 1024; // 10 МБ
             });
-            
+
+            var modelUrl = builder.Configuration.GetValue<string>(ConfigurationConsts.ModelUrl);
+            if (modelUrl is null)
+            {
+                builder.Services.AddTransient<IModelService, MockModelService>();
+            }
+            else
+            {
+                builder.Services.AddTransient<IModelService, MlModelService>();
+            }
         }
 
         private static WebApplication ConfigureApp(WebApplicationBuilder builder)

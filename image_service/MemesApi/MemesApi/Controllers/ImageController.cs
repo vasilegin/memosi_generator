@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
+using MemesApi.Controllers.Attributes;
+using MemesApi.Services;
 
 namespace MemesApi.Controllers
 {
@@ -14,10 +16,12 @@ namespace MemesApi.Controllers
     {
         private readonly MemeContext _context;
         private readonly IOptions<AppSettings> _config;
-        public ImagesController(MemeContext context, IOptions<AppSettings> config)
+        private readonly IModelService _modelService;
+        public ImagesController(MemeContext context, IOptions<AppSettings> config, IModelService modelService)
         {
             _context = context;
             _config = config;
+            _modelService = modelService;
         }
 
         [HttpPost("estimate/{imageId:int}")]
@@ -69,6 +73,36 @@ namespace MemesApi.Controllers
             };
 
             return new ImageResponse(nextFile?.Id, GetFullUrl(nextFile?.FileName), nextFile == null);
+        }
+        
+        [HttpPost("upload")]
+        public async Task<ActionResult<ImageResponse>> UploadImage(
+            [Required]
+            [ImageValidation(MaxSize = 10 * 1024 * 1024, Extensions=".png,.jpg,.jpeg")] 
+            IFormFile imageFile)
+        {
+            var modelStream = await _modelService.SendToModelAsync(imageFile.OpenReadStream());
+
+            var format = imageFile.ContentType.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
+            var fileName = $"{Guid.NewGuid()}.{format}";
+            var filePath = $"./static/{fileName}";
+            
+            DateTime creationDate;
+            await using (var stream = System.IO.File.Create(filePath))
+            {
+                await modelStream.CopyToAsync(stream);
+                creationDate = DateTime.Now;
+            }
+            
+            var fileMeta = new FileMeta { Format = format, CreationDate = creationDate };
+            await _context.Metas.AddAsync(fileMeta);
+            
+            var memeFile = new MemeFile { FileName = fileName, Meta = fileMeta };
+            var fileEntry = await _context.Files.AddAsync(memeFile);
+
+            await _context.SaveChangesAsync();
+
+            return new ImageResponse(fileEntry.Entity.Id, GetFullUrl(fileEntry.Entity.FileName), true);
         }
 
         private string GetFullUrl(string? fileName)
