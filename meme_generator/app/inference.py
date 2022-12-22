@@ -39,8 +39,8 @@ app.add_middleware(
 @app.post('/get_meme')
 def get_meme(img: UploadFile = File(...)):
     with torch.no_grad():
-        img_pil = Image.open(io.BytesIO(img.file.read()))
-        img_t = clip_preprocess(img_pil).unsqueeze(0).cuda()
+        img_pil = Image.open(io.BytesIO(img.file.read())).convert('RGBA')
+        img_t = clip_preprocess(img_pil).unsqueeze(0).to(device)
         meme = get_a_meme(lstm, img_t, img_pil, vocab)
 
     with io.BytesIO() as img_bytes:
