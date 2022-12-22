@@ -29,86 +29,86 @@ services:
 
 
 
-  # memes-api:
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: image_service/MemesApi/MemesApi/
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 9999:9999
-  #   volumes:
-  #     - ${STATIC_FILES_PATH}:/app/static
-  #   restart: always
+  memes-api:
+    env_file:
+      - .env
+    build:
+      context: image_service/MemesApi/MemesApi/
+      dockerfile: Dockerfile
+    ports:
+      - 9999:9999
+    volumes:
+      - ${STATIC_FILES_PATH}:/app/static
+    restart: always
 
-  # bot:
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: tg_bot/
-  #     dockerfile: Dockerfile
+  bot:
+    env_file:
+      - .env
+    build:
+      context: tg_bot/
+      dockerfile: Dockerfile
 
-  # cadvisor:
-  #   image: gcr.io/cadvisor/cadvisor
-  #   container_name: cadvisor
-  #   restart: unless-stopped
-  #   privileged: true
-  #   env_file:
-  #     - .env
-  #   command:
-  #     - '--housekeeping_interval=10s'
-  #     - '--allow_dynamic_housekeeping=false'
-  #     - '--docker_only=true'
-  #   volumes:
-  #     - /:/rootfs:ro
-  #     - /var/run:/var/run:rw
-  #     - /sys:/sys:ro
-  #     - ${CADVISOR_MNT}:/rootfs/var/lib/docker:ro
-  #     - /dev/disk/:/dev/disk:ro
-  #   ports:
-  #     - 8077:8080
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    env_file:
+      - .env
+    command:
+      - '--housekeeping_interval=10s'
+      - '--allow_dynamic_housekeeping=false'
+      - '--docker_only=true'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - ${CADVISOR_MNT}:/rootfs/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - 8077:8080
 
-  # node-exporter:
-  #   image: quay.io/prometheus/node-exporter
-  #   container_name: node-exporter 
-  #   restart: unless-stopped
-  #   command:
-  #     - '--path.rootfs=/host'
-  #   pid: host
-  #   ports:
-  #     - 9100:9100
-  #   volumes:
-  #     - '/:/host:ro,rslave'
+  node-exporter:
+    image: quay.io/prometheus/node-exporter
+    container_name: node-exporter 
+    restart: unless-stopped
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    ports:
+      - 9100:9100
+    volumes:
+      - '/:/host:ro,rslave'
 
-  # grafana:
-  #   container_name: grafana
-  #   image: grafana/grafana:7.5.6
-  #   restart: always
-  #   ports:
-  #     - 3000:3000
-  #   volumes:
-  #     - ./monitoring/grafana/:/etc/grafana/
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:7.5.6
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - ./monitoring/grafana/:/etc/grafana/
 
-  # prometheus:
-  #   container_name: prometheus
-  #   image: prom/prometheus:latest
-  #   restart: always
-  #   ports:
-  #     - 9090:9090
-  #   volumes:
-  #     - ./monitoring/prometheus/:/etc/prometheus/
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitoring/prometheus/:/etc/prometheus/
 
-  # portainer:
-  #   container_name: portainer
-  #   image: "portainer/portainer"
-  #   restart: always
-  #   ports:
-  #     - 9000:9000
-  #     - 8000:8000
-  #   command: -H unix:///var/run/docker.sock
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - portainer_volume:/data
+  portainer:
+    container_name: portainer
+    image: "portainer/portainer"
+    restart: always
+    ports:
+      - 9000:9000
+      - 8000:8000
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_volume:/data
 
 volumes:
   portainer_volume:
