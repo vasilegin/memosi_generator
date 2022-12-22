@@ -11,7 +11,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "API_URL": "http://127.0.0.1:9999",
         "CONNECTION_STRING": "Data Source=Memes.db;",
-        "MODEL_CONNECTION_STRING": "http://127.0.0.1:8000"
+        "MODEL_CONNECTION_STRING": "http://127.0.0.1:8088"
       }
     }
   }

@@ -95,7 +95,8 @@ namespace MemesApi
             {
                 FileProvider = new PhysicalFileProvider(
                     Path.Combine(Environment.CurrentDirectory, "static")),
-                RequestPath = "/static"
+                RequestPath = "/static",
+                ServeUnknownFileTypes = true
             });
             
             app.UseSwagger();

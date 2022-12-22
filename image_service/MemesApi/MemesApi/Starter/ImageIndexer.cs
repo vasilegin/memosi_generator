@@ -25,7 +25,7 @@ namespace MemesApi.Starter
                 var directoryPath = Path.Combine(Environment.CurrentDirectory, "static");
                 
                 var (files, metas) = Directory.EnumerateFiles(directoryPath)
-                    .Where(f => !f.Contains(".gitkeep"))
+                    .Where(f => !f.Contains(".gitkeep") && !f.Contains(".txt"))
                     .Select(path =>
                     {
                         FileSystemInfo info = new FileInfo(path);
