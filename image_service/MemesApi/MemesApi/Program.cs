@@ -69,6 +69,7 @@ namespace MemesApi
             {
                 config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl) + "/static";
                 config.MaxImageSize = 10 * 1024 * 1024; // 10 МБ
+                config.ModelServiceUrl = builder.Configuration.GetValue<string>(ConfigurationConsts.ModelUrl);
             });
 
             var modelUrl = builder.Configuration.GetValue<string>(ConfigurationConsts.ModelUrl);
@@ -78,6 +79,10 @@ namespace MemesApi
             }
             else
             {
+                builder.Services.AddHttpClient(ModelServiceConsts.ClientName, conf =>
+                {
+                    conf.BaseAddress = new Uri(modelUrl);
+                });
                 builder.Services.AddTransient<IModelService, MlModelService>();
             }
         }
