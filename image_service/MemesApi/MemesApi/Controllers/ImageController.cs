@@ -81,7 +81,11 @@ namespace MemesApi.Controllers
             [ImageValidation(MaxSize = 10 * 1024 * 1024, Extensions=".png,.jpg,.jpeg")] 
             IFormFile imageFile)
         {
-            var modelStream = await _modelService.SendToModelAsync(imageFile.OpenReadStream());
+            var modelStream = await _modelService.SendToModelAsync(imageFile.OpenReadStream(), imageFile.FileName);
+            if(modelStream is null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Unable to generate meme. Please try again with different file");
+            }
 
             var format = imageFile.ContentType.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
             var fileName = $"{Guid.NewGuid()}.{format}";

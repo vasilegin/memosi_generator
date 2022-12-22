@@ -2,5 +2,5 @@
 
 public interface IModelService
 {
-    public Task<Stream> SendToModelAsync(Stream stream);
+    public Task<Stream?> SendToModelAsync(Stream stream, string fileName);
 }
