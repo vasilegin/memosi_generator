@@ -23,6 +23,9 @@ async def cmd_start(message: types.Message):
 async def cmd_next(message: types.Message):
     resp = await api.get_next(user_id_from(message))
     print(resp)
+    if resp['finished']:
+        await message.answer('Мы закончили, попробуй позже')
+        return
     await message.answer_photo(await api.get_image(resp['url']), reply_markup=Emoji.emojiRating(imageId=resp['imageId']))
 
 
