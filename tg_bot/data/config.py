@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-BOT_TOKEN = '5730171718:AAE4zHAyiu8vhu0W3rKCd088ZIhhTDs0ZB4'
+BOT_TOKEN = ''
 BASE_URL = ''
 
 #take url from env if started via
